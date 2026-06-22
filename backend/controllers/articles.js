@@ -90,6 +90,7 @@ const createArticle = async (req, res, next) => {
       title: title,
       description: description,
       body: body,
+      userId: loggedUser.id,
     });
 
     for (const tag of tagList) {
@@ -107,7 +108,6 @@ const createArticle = async (req, res, next) => {
     delete loggedUser.dataValues.token;
 
     article.dataValues.tagList = tagList;
-    article.setAuthor(loggedUser);
     article.dataValues.author = loggedUser;
     await appendFollowers(loggedUser, loggedUser);
     await appendFavorites(loggedUser, article);

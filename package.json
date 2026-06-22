@@ -16,10 +16,14 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently --names 'Node,Vite' -c 'green,blue' 'npm run dev -w backend' 'npm run dev -w frontend'",
+    "dev": "concurrently --names \"Node,Vite\" -c \"green,blue\" \"npm run dev -w backend\" \"npm run dev -w frontend\"",
     "sqlz": "npx -w backend sequelize-cli",
     "start": "npm run build -w frontend && npm run start -w backend",
-    "test": "vitest"
+    "test": "vitest",
+    "db:start": "docker compose up -d",
+    "db:stop": "docker compose down",
+    "db:setup": "npm run db:start && timeout /t 20 /nobreak && npm run sqlz -- db:create && npm run sqlz -- db:migrate && npm run sqlz -- db:seed:all",
+    "db:reset": "npm run sqlz -- db:drop && npm run sqlz -- db:create && npm run sqlz -- db:migrate && npm run sqlz -- db:seed:all"
   },
   "devDependencies": {
     "@vitejs/plugin-react-swc": "^4.2.3",
