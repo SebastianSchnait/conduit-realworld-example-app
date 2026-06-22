@@ -23,7 +23,7 @@ Before you run the project, make sure that you have the following tools and soft
 - [Node.js](https://nodejs.org/en/download/) `v18.11.0+`
 - [NPM](https://www.npmjs.com/) (usually included with Node.js)
 - SQL database
-
+ 
 ### Installation
 
 To install the project on your computer, follow these steps:
