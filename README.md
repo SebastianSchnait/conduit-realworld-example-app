@@ -48,12 +48,20 @@ To install the project on your computer, follow these steps:
 
 ### Configuration
 
-1. docker compose up -d
+1. Datenbank
+```bash
+docker compose up -d
+```
 
-2. npm run db:setup
+2. Datenbank Setup
+```bash
+npm run db:setup
+```
 
-3. npm run dev
-
+3. Starten
+```bash
+npm run dev
+``` 
 #### Running Tests
 
 To run tests, simply run the following command:
