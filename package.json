@@ -20,14 +20,18 @@
     "sqlz": "npx -w backend sequelize-cli",
     "start": "npm run build -w frontend && npm run start -w backend",
     "test": "vitest",
+    "test:e2e": "playwright test",
     "db:start": "docker compose up -d",
     "db:stop": "docker compose down",
     "db:setup": "npm run db:start && timeout /t 20 /nobreak && npm run sqlz -- db:create && npm run sqlz -- db:migrate && npm run sqlz -- db:seed:all",
     "db:reset": "npm run sqlz -- db:drop && npm run sqlz -- db:create && npm run sqlz -- db:migrate && npm run sqlz -- db:seed:all"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@vitejs/plugin-react-swc": "^4.2.3",
     "concurrently": "^9.2.1",
-    "vitest": "^4.0.18"
+    "jsdom": "^29.1.1",
+    "vitest": "^4.0.18",
+    "wait-on": "^9.0.10"
   }
 }
