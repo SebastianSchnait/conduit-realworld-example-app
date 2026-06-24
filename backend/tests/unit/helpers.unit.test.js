@@ -18,6 +18,17 @@ describe("appendTagList", () => {
 
     expect(result).toEqual(["react", "vue"]);
   });
+
+  test.each([
+    ["empty tags", [], []],
+    ["single tag", [{ name: "javascript" }], ["javascript"]],
+    ["several Tags with special characters", [{ name: "rea?ct" }, { name: "vue*" }], ["rea?ct", "vue*"]],
+  ])("changed article.dataValues.tagList correct at %s", (_description, articleTags, expectedTagList) => {
+    const article = { dataValues: {} };
+    const result = appendTagList(articleTags, article);
+    expect(article.dataValues.tagList).toEqual(expectedTagList);
+    expect(result).toBeUndefined();
+  });
 });
 
 describe("appendFollowers", () => {
@@ -53,16 +64,65 @@ describe("appendFollowers", () => {
   });
 
   test("works without object (found an error!)", async () => {
+	const loggedUser = { id: 1 };
+	const mockArticle = {
+	  author: { dataValues: {} },
+	  getAuthor: vi.fn().mockResolvedValue(undefined),
+	};
+
+	try {
+	  await appendFollowers(loggedUser, mockArticle);
+	 } catch (error) {
+	  //should not be needed!!! but we want to make sure our build pipeline is running
+	 }
+});
+
+describe("appendFavorites", () => {
+  test("works when user has favorited the article", async () => {
     const loggedUser = { id: 1 };
     const mockArticle = {
-      author: { dataValues: {} },
-      getAuthor: vi.fn().mockResolvedValue(undefined),
+      hasUser: vi.fn().mockResolvedValue(true),
+      countUsers: vi.fn().mockResolvedValue(5),
+      dataValues: {},
     };
 
-    try {
-      await appendFollowers(loggedUser, mockArticle);
-     } catch (error) {
-      //should not be needed!!! but we want to make sure our build pipeline is running
-     }
+    await appendFavorites(loggedUser, mockArticle);
+
+    expect(mockArticle.dataValues.favorited).toBe(true);
+    expect(mockArticle.dataValues.favoritesCount).toBe(5);
+    expect(mockArticle.hasUser).toHaveBeenCalledWith(loggedUser);
+    expect(mockArticle.countUsers).toHaveBeenCalled();
+  });
+
+  test("works when user has not favorited the article", async () => {
+    const loggedUser = { id: 1 };
+    const mockArticle = {
+      hasUser: vi.fn().mockResolvedValue(false),
+      countUsers: vi.fn().mockResolvedValue(3),
+      dataValues: {},
+    };
+
+    await appendFavorites(loggedUser, mockArticle);
+
+    expect(mockArticle.dataValues.favorited).toBe(false);
+    expect(mockArticle.dataValues.favoritesCount).toBe(3);
+    expect(mockArticle.hasUser).toHaveBeenCalledWith(loggedUser);
+    expect(mockArticle.countUsers).toHaveBeenCalled();
+  });
+
+  test("works without logged-in user", async () => {
+    const mockArticle = {
+      hasUser: vi.fn().mockResolvedValue(true),
+      countUsers: vi.fn().mockResolvedValue(4),
+      dataValues: {},
+    };
+
+    await appendFavorites(null, mockArticle);
+
+    expect(mockArticle.dataValues.favorited).toBe(false);
+    expect(mockArticle.dataValues.favoritesCount).toBe(4);
+    expect(mockArticle.hasUser).toHaveBeenCalledWith(null);
+    expect(mockArticle.countUsers).toHaveBeenCalled();
   });
 });
+})
