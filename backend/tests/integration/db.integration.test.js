@@ -10,10 +10,19 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   const testUsernames = ["dbtestuser", "tagauthor", "follower", "followed"];
+
+  await sequelize.query(
+    `DELETE FROM [Followers]
+     WHERE [userId]     IN (SELECT [id] FROM [Users] WHERE [username] IN (:names))
+        OR [followerId] IN (SELECT [id] FROM [Users] WHERE [username] IN (:names))`,
+    { replacements: { names: testUsernames } }
+  );
+
+  await Article.destroy({ where: { slug: ["wat-ist-das"] } });
+
+  await Tag.destroy({ where: { name: ["vitest-v3.0#alpha!"] } });
+
   await User.destroy({ where: { username: testUsernames } });
-  
-  const testTags = ["vitest-v3.0#alpha!"];
-  await Tag.destroy({ where: { name: testTags } });
 });
 
 afterAll(async () => {
