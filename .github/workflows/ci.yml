@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-and-integration:
+    name: Unit & Integration Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          SA_PASSWORD: Conduit_Dev_2024!
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Express
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Conduit_Dev_2024!' -Q 'SELECT 1' -No"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Create backend .env
+        run: |
+          cat > backend/.env <<EOF
+          PORT=3001
+          JWT_KEY=ci-test-secret-key
+          DEV_DB_USERNAME=sa
+          DEV_DB_PASSWORD=Conduit_Dev_2024!
+          DEV_DB_NAME=conduit_development
+          DEV_DB_HOSTNAME=localhost
+          DEV_DB_DIALECT=mssql
+          DEV_DB_LOGGING=false
+          TEST_DB_USERNAME=sa
+          TEST_DB_PASSWORD=Conduit_Dev_2024!
+          TEST_DB_NAME=conduit_testing
+          TEST_DB_HOSTNAME=localhost
+          TEST_DB_DIALECT=mssql
+          TEST_DB_LOGGING=false
+          PROD_DB_USERNAME=sa
+          PROD_DB_PASSWORD=Conduit_Dev_2024!
+          PROD_DB_NAME=conduit_production
+          PROD_DB_HOSTNAME=localhost
+          PROD_DB_DIALECT=mssql
+          PROD_DB_LOGGING=false
+          EOF
+
+      - run: npm test -- --reporter=verbose
+
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: unit-and-integration
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          SA_PASSWORD: Conduit_Dev_2024!
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Express
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Conduit_Dev_2024!' -Q 'SELECT 1' -No"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Create backend .env
+        run: |
+          cat > backend/.env <<EOF
+          PORT=3001
+          JWT_KEY=ci-test-secret-key
+          DEV_DB_USERNAME=sa
+          DEV_DB_PASSWORD=Conduit_Dev_2024!
+          DEV_DB_NAME=conduit_development
+          DEV_DB_HOSTNAME=localhost
+          DEV_DB_DIALECT=mssql
+          DEV_DB_LOGGING=false
+          EOF
+
+      - name: Set up database
+        run: |
+          npm run sqlz -- db:create
+          npm run sqlz -- db:migrate
+          npm run sqlz -- db:seed:all
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start application
+        run: npm run dev &
+        env:
+          NODE_ENV: development
+
+      - name: Wait for app to be ready
+        run: npx wait-on http://localhost:3000 http://localhost:3001/api --timeout 30000
+
+      - run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
