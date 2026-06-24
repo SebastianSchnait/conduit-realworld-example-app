@@ -20,6 +20,7 @@
     "sqlz": "npx -w backend sequelize-cli",
     "start": "npm run build -w frontend && npm run start -w backend",
     "test": "vitest",
+    "test:db": "vitest run --config vitest.db.config.js --reporter=verbose",
     "test:e2e": "playwright test",
     "db:start": "docker compose up -d",
     "db:stop": "docker compose down",

@@ -17,6 +17,7 @@ export default defineConfig({
     exclude: [
       "tests/e2e/**",
       "node_modules/**",
+      "backend/tests/integration/db.integration.test.js",
     ],
     env: {
       JWT_KEY: "vitest-test-secret-key",
