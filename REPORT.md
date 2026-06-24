@@ -287,27 +287,7 @@ Steps:
 
 ---
 
-## 8. Technische Herausforderungen
-
-### ESM/CJS-Instanz-Duplikate bei `instanceof`
-
-`errorHandler.js` importiert `customErrors.js` via CJS-`require()`. Wenn ein Test dieselben Fehlerklassen per ESM-`import` lädt, entstehen zwei separate Modulinstanzen – `instanceof` liefert `false`. Lösung: `createRequire(import.meta.url)` in den Integrationstests, um die exakt gleichen CJS-gecachten Instanzen zu erhalten.
-
-### Vitest-Mock-Registry und CJS `require()`
-
-`vi.mock("../../models/index.js")` fängt native CJS-`require()`-Aufrufe in der ESM→CJS-Interop-Kette nicht ab. Daher wurden die HTTP-Integrationstests auf Szenarien umgestellt, die entweder vor dem ersten DB-Aufruf abbrechen oder `vi.spyOn()` auf konkrete Modellmethoden verwenden.
-
-### Seeder-Passwörter und bcrypt
-
-Der ursprüngliche Seeder speicherte Passwörter als Klartext. Die Login-Controller-Funktion nutzt `bcryptCompare`, das einen echten bcrypt-Hash als Vergleichswert erwartet. Der Seeder wurde korrigiert, sodass Passwörter vor dem Einfügen mit `bcrypt.hash(password, 10)` gehasht werden.
-
-### Playwright und Vite HMR-WebSocket
-
-Vites Hot-Module-Replacement hält eine persistente WebSocket-Verbindung offen, die verhindert, dass Chromiums `load`-Event jemals feuert. Lösung: `{ waitUntil: "domcontentloaded" }` bei allen `page.goto()`-Aufrufen.
-
----
-
-## 9. Lokale Entwicklung – Schnellstart
+## 8. Lokale Entwicklung – Schnellstart
 
 ```bash
 # 1. Docker-Datenbank starten und initialisieren
